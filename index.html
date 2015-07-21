@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+    <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer></script>
+    <script>
+        var clientID = "1016818064699-ehl09a0etdvd7l5el2am2sk3ci9n9j3p.apps.googleusercontent.com";
+        var clientSecret = "IqpZKXZ0_ZsHo7vWm0y7dWqU";
+        var auth2;
+        function start() {
+            console.log("Starting");
+            gapi.load('auth2', function() {
+                auth2 = gapi.auth2.init({
+                    client_id: clientID,
+                    scope: 'https://www.googleapis.com/auth/calendar'
+                });
+            });
+        }
+        function signInCallback(authResult) {
+            if (authResult['code']) {
+                auth2.signIn().then(function() {
+                    var profile = auth2.currentUser.get().getBasicProfile();
+                    console.log(authResult['code']);
+                    console.log(profile.getEmail());
+                    var dataString = "code="+authResult['code']+"&"
+                            +"client_id="+clientID+"&" +
+                            "client_secret="+clientSecret+"&" +
+                            "redirect_uri=http://localhost:63342&" +
+                            "grant_type=authorization_code&" +
+                            "access_type=offline";
+                    var dataStringNoOffline = "code="+authResult['code']+"&"
+                            +"client_id="+clientID+"&" +
+                            "client_secret="+clientSecret+"&" +
+                            "redirect_uri=http://localhost:63342&" +
+                            "grant_type=authorization_code";
+                    //TODO get url from https://accounts.google.com/.well-known/openid-configuration
+                    console.log(dataStringNoOffline);
+                  var aj = $.ajax({
+                        type: "POST",
+                        url: "https://www.googleapis.com/oauth2/v3/token",
+                        contentType: 'application/x-www-form-urlencoded',
+                        //dataType: 'jsonp',
+                        data: dataStringNoOffline,
+                        success: function(data, text,jqxhr){
+                            console.log("Data: "+JSON.stringify(data));
+                        },
+                        fail: function(msg){
+                            console.log("FAIL " + msg);
+                        }
+                    });
+                });
+            } else {
+                document.write("error");
+            }
+        }
+    </script>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<button id="signinButton">Sign in with Google</button>
+<div id="result"></div>
+<script>
+    $('#signinButton').click(function() {
+        auth2.grantOfflineAccess({'redirect_uri': 'postmessage'}).then(signInCallback);
+    });
+</script>
+</body>
+</html>
